@@ -3,15 +3,15 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__) # Default syntax in flask.
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test01.db' # Create or connect to a database named test01.
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///many_to_many.db' # Create or connect to a database named test01.
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False # Reduce memory usage.
 
 db = SQLAlchemy(app) # Default syntax in SQLAlachemy.
 
 # Use db.Table to create a table. subs means subscriptions. 
 subs = db.Table("subs",
-    db.Column("user_id", db.Integer, db.ForeignKey(user.user_id)),
-    db.Column("channel_id", db.Integer, db.ForeignKey(channel.channel_id))
+    db.Column("user_id", db.Integer, db.ForeignKey("user.user_id")),
+    db.Column("channel_id", db.Integer, db.ForeignKey("channel.channel_id"))
     )
 # db.Table("Table_Name", db.Column("Column_Name", configs..., ForeignKey(Table_Name.Column_Name)), ...)
 
@@ -82,3 +82,58 @@ class Channel(db.Model):
 # This won't be a column. It's like a attribute to the User model.
 # This attribute is going to create the connection between User, Channel and subs(Association Table.)
 # I'll call this attribute "subscriptions"
+
+# Now go to python3 shell.
+# >>> from main import *
+# >>> db.create_all()
+
+# Create some Users
+# >>> user1 = User(name="Tom")
+# >>> user2 = User(name="Tim")
+# >>> user3 = User(name="Ray")
+# >>> user4 = User(name="Ken")
+# >>> db.session.add(user1)
+# >>> db.session.add(user2)
+# >>> db.session.add(user3)
+# >>> db.session.add(user4)
+# >>> db.session.commit()
+
+# Create some Channels
+# >>> channel1 = Channel(channel_name="HBO")
+# >>> channel2 = Channel(channel_name="CNN")
+# >>> channel3 = Channel(channel_name="NHK")
+# >>> db.session.add(channel1)
+# >>> db.session.add(channel2)
+# >>> db.session.add(channel3)
+# >>> db.session.commit()
+
+# Make connection between Users and Channels
+# Because the backref  in subscriptions = db.relationship("Channel", secondary=subs, backref=db.backref("subscribers", lazy="dynamic"))
+# It is able to  "channel.subscribers" 
+# >>> channel1.subscribers.append(user1)
+# >>> channel1.subscribers.append(user3)
+# >>> channel1.subscribers.append(user4)
+# >>> channel2.subscribers.append(user2)
+# >>> channel2.subscribers.append(user4)
+# >>> db.session.commit()
+
+# >>> channel1.subscribers.all()
+# [<User 1>, <User 3>, <User 4>]
+# >>> for user in channel1.subscribers:
+# ...     print(user.name)
+# ... 
+# Tom
+# Ray
+# Ken
+
+# >>> for user in channel2.subscribers:
+# ...     print(user.name)
+# ... 
+# Tim
+# Ken
+
+# >>> for channel in user4.subscriptions:
+# ...     print(channel.channel_name)
+# ... 
+# CNN
+# HBO

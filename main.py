@@ -22,6 +22,37 @@ class User(db.Model):
     # Unless you want to change the name of the table on purpose.
     user_id = db.Column(db.Integer, primary_key=True) # The first column is user_id. It's a Integer and primary key.
     name = db.Column(db.String(20)) # The second column is name. It's a string up to 20 characters.
+    subscriptions = db.relationship("Channel", secondary=subs, backref=db.backref("subscribers", lazy="dynamic"))
+    # subscriptions is going to be a relationship between two table.
+    # So the first argument is "Channel".
+    # Since this is a many-to-many I have to have a secondary association or a secondary relationship.
+    # So the secondary relationship is goint to be the name of the table that is associating the User and Channel tables.
+    # In that case, it "subs" which is declared up at "secondary=subs".
+    # Now I need to create the back reference.
+    # Back reference almost creates a field in the child table.
+    # The other table in this example is Channel.
+    # So when I create a back reference to whatever table is the argument in this DB relationship.
+    # It's like I create a filed down at Channel.
+    # Even thought I didn't declare anything in class Channel.
+    # It's almost like backref exists there.
+    # And when I go to manipulate the Channel model, I'll have access to backref.
+
+    # (create "backref" at class User is same meaning create "backref" at class Channel.)
+    # class User(db.Model):
+    #   ...
+    #   subscriptions = db.relationship("Channel", secondary=subs, backref
+
+    # class Channel(db.Model):
+    #   ...
+    #   backref
+    
+    # lazy defines when SQLAlchemy will load the data from the database:
+    # 'select' / True
+    # 'joined' / False
+    # 'subquery' 
+    # 'dynamic'
+    # https://flask-sqlalchemy.palletsprojects.com/en/2.x/models/
+
 
 # Create a table named Channel.
 class Channel(db.Model):
@@ -44,3 +75,10 @@ class Channel(db.Model):
 # I won't be able to directly modify it in my code.
 # SQLAlchemy will handle updating this table.
 # I'll just use db.Table to create a table.
+
+# Now I have to create some kind of connection between these three tables.
+# To do that I need to put this connection inside of the User model.
+# I'm going to add the third column in a sense.
+# This won't be a column. It's like a attribute to the User model.
+# This attribute is going to create the connection between User, Channel and subs(Association Table.)
+# I'll call this attribute "subscriptions"
